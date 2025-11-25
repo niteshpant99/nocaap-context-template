@@ -1,0 +1,50 @@
+name: Sync Registry Safety Net
+
+# Run on every push to main
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'nocaap-registry.json' # Prevent infinite loops if the bot pushes
+
+permissions:
+  contents: write
+
+jobs:
+  ensure-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # Required to push back to the repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Generator
+        run: node scripts/generate-registry.js
+
+      - name: Check for Drift and Commit
+        run: |
+          # Configure the bot identity
+          git config --global user.name "nocaap-bot"
+          git config --global user.email "bot@nocaap.dev"
+
+          # Check if the registry file changed
+          if [[ -n $(git status --porcelain nocaap-registry.json) ]]; then
+            echo "⚠️ Registry drift detected. Fixing..."
+            
+            git add nocaap-registry.json
+            git commit -m "chore: auto-repair nocaap-registry.json [skip ci]"
+            git push
+            
+            echo "✅ Fixed registry drift."
+          else
+            echo "✅ Registry is already in sync."
+          fi
+

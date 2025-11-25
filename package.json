@@ -1,0 +1,21 @@
+{
+  "name": "context-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Organizational Context Hub powered by nocaap",
+  "scripts": {
+    "build-registry": "node scripts/generate-registry.js",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run build-registry && git add nocaap-registry.json"
+  },
+  "devDependencies": {
+    "simple-git-hooks": "^2.13.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_ORG/context-hub.git"
+  }
+}
+
